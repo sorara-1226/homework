@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>本日の家庭教師課題｜全60問</title>
+<style>
+:root { color-scheme: light; --ink:#1f2937; --muted:#64748b; --line:#dbe3ed; --paper:#f5f7fb; --accent:#2563eb; --correct:#15803d; --wrong:#b91c1c; }
+* { box-sizing:border-box; }
+body { margin:0; font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif; color:var(--ink); background:var(--paper); line-height:1.6; }
+header { background:#1e3a8a; color:white; padding:28px 16px 24px; }
+.hero { max-width:850px; margin:auto; }
+h1 { margin:0 0 6px; font-size:clamp(1.5rem,4vw,2.1rem); }
+header p { margin:0; opacity:.9; }
+main { max-width:850px; padding:18px 12px 44px; margin:auto; }
+.panel { background:white; border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:16px; box-shadow:0 2px 8px #0f172a0a; }
+.info { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+.pill { background:#eff6ff; color:#1d4ed8; padding:5px 10px; border-radius:999px; font-size:.9rem; font-weight:700; }
+.progress-wrap { height:8px; background:#e2e8f0; border-radius:999px; overflow:hidden; margin-top:12px; }
+#progress { height:100%; width:0%; background:#3b82f6; transition:width .2s; }
+.section-title { margin:24px 0 10px; font-size:1.25rem; }
+.question { background:white; border:1px solid var(--line); border-radius:14px; padding:15px; margin:10px 0; }
+.qtitle { font-weight:700; margin-bottom:10px; }
+.options { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.option { border:1px solid #cbd5e1; border-radius:10px; padding:10px 12px; display:flex; gap:8px; align-items:flex-start; cursor:pointer; background:#fff; }
+.option:hover { border-color:#60a5fa; background:#f8fbff; }
+.option input { margin-top:5px; accent-color:var(--accent); }
+.option.correct { border-color:#22c55e; background:#f0fdf4; }
+.option.wrong { border-color:#f87171; background:#fef2f2; }
+.feedback { display:none; margin-top:10px; border-radius:9px; background:#f8fafc; padding:10px; font-size:.95rem; }
+.feedback.show { display:block; }
+.feedback .right { color:var(--correct); font-weight:700; }
+.feedback .incorrect { color:var(--wrong); font-weight:700; }
+.actions { position:sticky; bottom:0; background:#ffffffed; backdrop-filter:blur(8px); border-top:1px solid var(--line); padding:12px; margin:24px -12px 0; display:flex; gap:10px; justify-content:center; }
+button { border:0; border-radius:11px; padding:12px 18px; font:inherit; font-weight:700; cursor:pointer; }
+.primary { background:var(--accent); color:white; }
+.secondary { background:#e2e8f0; color:#1e293b; }
+button:focus-visible, label:focus-within { outline:3px solid #93c5fd; outline-offset:2px; }
+#result { display:none; }
+#result.show { display:block; }
+.score { font-size:1.8rem; font-weight:800; margin:4px 0; }
+.small { color:var(--muted); font-size:.9rem; }
+@media(max-width:560px) { .options { grid-template-columns:1fr; } .question { padding:13px; } .actions button { flex:1; padding:11px 8px; } }
+@media print { header { background:white; color:black; padding:0; } .actions { display:none; } body { background:white; } .question { break-inside:avoid; } }
+</style>
+</head>
+<body>
+<header><div class="hero">
+<h1>本日の家庭教師課題</h1>
+<p>中学範囲｜全60問・すべて4択</p>
+</div></header>
+<main>
+<div class="panel">
+<div class="info"><strong>名前：<span id="studentName">未記入</span></strong><span class="pill"><span id="answered">0</span> / 60 問回答</span></div>
+<label for="nameInput" class="small">名前（任意）</label>
+<input id="nameInput" type="text" placeholder="名前を入力" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:9px;font:inherit;margin-top:4px">
+<div class="progress-wrap"><div id="progress"></div></div>
+<p class="small">各問題でア〜エから1つ選び、最後に「採点する」を押してください。採点後、正解と解説が表示されます。</p>
+</div>
+<div id="quiz"></div>
+<div id="result" class="panel" aria-live="polite">
+<h2>採点結果</h2><div class="score" id="scoreText"></div><p id="resultMessage"></p>
+<p class="small">赤色は選んだ答えが不正解、緑色は正解です。各問題の解説も確認しましょう。</p>
+</div>
+<div class="actions">
+<button class="primary" id="gradeBtn" type="button">採点する</button>
+<button class="secondary" id="resetBtn" type="button">やり直す</button>
+</div>
+</main>
+<script>
+const questions = [{"section": "英単語", "q": "important の意味はどれ？", "opts": ["難しい", "重要な", "有名な", "便利な"], "ans": 1, "exp": "important＝重要な"}, {"section": "英単語", "q": "different の意味はどれ？", "opts": ["同じ", "静かな", "違った", "簡単な"], "ans": 2, "exp": "different＝違った"}, {"section": "英単語", "q": "usually の意味はどれ？", "opts": ["たいてい", "ときどき", "決して〜ない", "すぐに"], "ans": 0, "exp": "usually＝たいてい、ふつう"}, {"section": "英単語", "q": "borrow の意味はどれ？", "opts": ["貸す", "買う", "借りる", "返す"], "ans": 2, "exp": "borrow＝借りる。lend は「貸す」。"}, {"section": "英単語", "q": "arrive の意味はどれ？", "opts": ["出発する", "到着する", "忘れる", "選ぶ"], "ans": 1, "exp": "arrive＝到着する"}, {"section": "英単語", "q": "enough の意味はどれ？", "opts": ["十分な", "少しの", "危険な", "特別な"], "ans": 0, "exp": "enough＝十分な"}, {"section": "英単語", "q": "practice の意味はどれ？", "opts": ["練習する／練習", "約束する", "説明する", "招待する"], "ans": 0, "exp": "practice＝練習する、練習"}, {"section": "英単語", "q": "museum の意味はどれ？", "opts": ["図書館", "博物館・美術館", "駅", "病院"], "ans": 1, "exp": "museum＝博物館・美術館"}, {"section": "英単語", "q": "weather の意味はどれ？", "opts": ["季節", "気温", "天気", "景色"], "ans": 2, "exp": "weather＝天気"}, {"section": "英単語", "q": "between の意味はどれ？", "opts": ["〜の前に", "（2つのもの）の間に", "〜の後ろに", "〜の向こうに"], "ans": 1, "exp": "between＝（2つのもの）の間に"}, {"section": "英単語", "q": "decide の意味はどれ？", "opts": ["決める", "忘れる", "運ぶ", "信じる"], "ans": 0, "exp": "decide＝決める"}, {"section": "英単語", "q": "careful の意味はどれ？", "opts": ["親切な", "注意深い", "疲れた", "有名な"], "ans": 1, "exp": "careful＝注意深い"}, {"section": "英単語", "q": "future の意味はどれ？", "opts": ["過去", "現在", "未来", "理由"], "ans": 2, "exp": "future＝未来"}, {"section": "英単語", "q": "invite の意味はどれ？", "opts": ["招待する", "発明する", "紹介する", "到着する"], "ans": 0, "exp": "invite＝招待する"}, {"section": "英単語", "q": "experience の意味はどれ？", "opts": ["経験", "練習", "計画", "問題"], "ans": 0, "exp": "experience＝経験"}, {"section": "英単語", "q": "healthy の意味はどれ？", "opts": ["空腹の", "健康な", "有名な", "親切な"], "ans": 1, "exp": "healthy＝健康な"}, {"section": "英単語", "q": "foreign の意味はどれ？", "opts": ["外国の", "地元の", "安全な", "必要な"], "ans": 0, "exp": "foreign＝外国の"}, {"section": "英単語", "q": "popular の意味はどれ？", "opts": ["人気のある", "可能な", "正確な", "危険な"], "ans": 0, "exp": "popular＝人気のある"}, {"section": "英単語", "q": "continue の意味はどれ？", "opts": ["始める", "終える", "続ける", "止める"], "ans": 2, "exp": "continue＝続ける"}, {"section": "英単語", "q": "message の意味はどれ？", "opts": ["手紙", "メッセージ・伝言", "新聞", "物語"], "ans": 1, "exp": "message＝メッセージ、伝言"}, {"section": "一次関数", "q": "一次関数の一般的な式はどれ？", "opts": ["y=ax²+b", "y=ax+b", "y=a/x+b", "y=x²+a"], "ans": 1, "exp": "一次関数の式は y=ax+b。"}, {"section": "一次関数", "q": "式 y=3x+2 の傾き a はどれ？", "opts": ["2", "3", "−2", "−3"], "ans": 1, "exp": "xの係数が傾きなので a=3。"}, {"section": "一次関数", "q": "式 y=−2x+5 の切片 b はどれ？", "opts": ["−2", "2", "5", "−5"], "ans": 2, "exp": "定数項が切片なので b=5。"}, {"section": "一次関数", "q": "式 y=4x−7 の傾きはどれ？", "opts": ["4", "−7", "7", "−4"], "ans": 0, "exp": "xの係数が傾きなので 4。"}, {"section": "一次関数", "q": "式 y=−x−3 の傾きと切片の組み合わせはどれ？", "opts": ["a=1, b=−3", "a=−1, b=−3", "a=−3, b=−1", "a=−1, b=3"], "ans": 1, "exp": "y=−x−3 なので a=−1、b=−3。"}, {"section": "一次関数", "q": "y=2x+1 で、x=3 のとき y はいくつ？", "opts": ["5", "6", "7", "8"], "ans": 2, "exp": "y=2×3+1=7。"}, {"section": "一次関数", "q": "y=−3x+4 で、x=2 のとき y はいくつ？", "opts": ["−10", "−2", "2", "10"], "ans": 1, "exp": "y=−3×2+4=−2。"}, {"section": "一次関数", "q": "一次関数 y=ax+4 が点 (2,10) を通る。a はいくつ？", "opts": ["2", "3", "4", "5"], "ans": 1, "exp": "10=2a+4 より 2a=6、a=3。"}, {"section": "一次関数", "q": "一次関数 y=2x+b が点 (3,8) を通る。b はいくつ？", "opts": ["−2", "0", "2", "4"], "ans": 2, "exp": "8=2×3+b より b=2。"}, {"section": "一次関数", "q": "グラフが y軸と交わる点が (0,−4) のとき、切片 b は？", "opts": ["−4", "0", "4", "分からない"], "ans": 0, "exp": "y軸との交点のy座標が切片なので −4。"}, {"section": "一次関数", "q": "直線が点 (0,1) と (2,5) を通る。傾き a は？", "opts": ["1", "2", "3", "4"], "ans": 1, "exp": "傾き=(5−1)/(2−0)=4/2=2。"}, {"section": "一次関数", "q": "直線が点 (1,3) と (3,7) を通る。傾き a は？", "opts": ["1", "2", "3", "4"], "ans": 1, "exp": "傾き=(7−3)/(3−1)=4/2=2。"}, {"section": "一次関数", "q": "グラフが点 (0,−2) と (1,1) を通る。一次関数の式は？", "opts": ["y=3x−2", "y=−3x−2", "y=2x+3", "y=x−2"], "ans": 0, "exp": "切片は−2、傾きは (1−(−2))/(1−0)=3。"}, {"section": "一次関数", "q": "グラフが点 (0,4) と (2,0) を通る。一次関数の式は？", "opts": ["y=2x+4", "y=−2x+4", "y=−4x+2", "y=−2x−4"], "ans": 1, "exp": "切片は4、傾きは (0−4)/(2−0)=−2。"}, {"section": "一次関数", "q": "一次関数 y=−2x+6 のグラフが y軸と交わる点は？", "opts": ["(0,−2)", "(6,0)", "(0,6)", "(−2,0)"], "ans": 2, "exp": "x=0を代入すると y=6。"}, {"section": "一次関数", "q": "一次関数 y=2x−6 のグラフが x軸と交わる点は？", "opts": ["(0,−6)", "(3,0)", "(0,3)", "(−3,0)"], "ans": 1, "exp": "x軸上では y=0。0=2x−6 より x=3。"}, {"section": "一次関数", "q": "傾きが正の直線のグラフは、左から右へ進むとどうなる？", "opts": ["右下がり", "水平", "右上がり", "必ずy軸を通る"], "ans": 2, "exp": "傾きが正なら右上がり。"}, {"section": "一次関数", "q": "切片が 3、傾きが −1 の一次関数は？", "opts": ["y=x+3", "y=−x+3", "y=3x−1", "y=−3x+1"], "ans": 1, "exp": "y=ax+b に a=−1、b=3 を代入。"}, {"section": "一次関数", "q": "直線 y=5x+b が点 (1,2) を通る。切片 b は？", "opts": ["−3", "−2", "2", "7"], "ans": 0, "exp": "2=5+b より b=−3。"}, {"section": "一次関数", "q": "直線が点 (0,2) と (4,10) を通る。傾きと切片は？", "opts": ["a=2, b=2", "a=4, b=2", "a=2, b=4", "a=−2, b=2"], "ans": 0, "exp": "傾き=(10−2)/(4−0)=2、切片は2。式は y=2x+2。"}, {"section": "中1〜中2数学", "q": "−7+12 の答えは？", "opts": ["−19", "−5", "5", "19"], "ans": 2, "exp": "−7+12=5。"}, {"section": "中1〜中2数学", "q": "−4−9 の答えは？", "opts": ["−13", "−5", "5", "13"], "ans": 0, "exp": "−4−9=−13。"}, {"section": "中1〜中2数学", "q": "−3×(−8) の答えは？", "opts": ["−24", "−11", "11", "24"], "ans": 3, "exp": "負×負は正。3×8=24。"}, {"section": "中1〜中2数学", "q": "18÷(−3) の答えは？", "opts": ["−6", "−3", "3", "6"], "ans": 0, "exp": "正÷負は負。18÷3=6。"}, {"section": "中1〜中2数学", "q": "3²−2³ の答えは？", "opts": ["1", "−1", "17", "−17"], "ans": 0, "exp": "3²−2³=9−8=1。"}, {"section": "中1〜中2数学", "q": "5x+2x を簡単にすると？", "opts": ["7", "7x", "10x", "x⁷"], "ans": 1, "exp": "同類項をまとめて 7x。"}, {"section": "中1〜中2数学", "q": "a=4 のとき、3a−5 の値は？", "opts": ["−1", "7", "12", "17"], "ans": 1, "exp": "3×4−5=7。"}, {"section": "中1〜中2数学", "q": "2(x+3) を展開すると？", "opts": ["2x+3", "2x+5", "2x+6", "x+6"], "ans": 2, "exp": "2をかっこの中に分配して 2x+6。"}, {"section": "中1〜中2数学", "q": "6x−9 を因数分解すると？", "opts": ["3(2x−3)", "6(x−9)", "9(x−6)", "3(2x+3)"], "ans": 0, "exp": "共通因数3でくくると 3(2x−3)。"}, {"section": "中1〜中2数学", "q": "方程式 3x+4=19 の解は？", "opts": ["3", "4", "5", "7"], "ans": 2, "exp": "3x=15 より x=5。"}, {"section": "中1〜中2数学", "q": "方程式 2x−7=5 の解は？", "opts": ["−6", "−1", "1", "6"], "ans": 3, "exp": "2x=12 より x=6。"}, {"section": "中1〜中2数学", "q": "方程式 5(x−1)=20 の解は？", "opts": ["3", "4", "5", "6"], "ans": 2, "exp": "両辺を5で割ると x−1=4、x=5。"}, {"section": "中1〜中2数学", "q": "比例 y=−3x で、x=4 のとき y は？", "opts": ["−12", "−7", "7", "12"], "ans": 0, "exp": "y=−3×4=−12。"}, {"section": "中1〜中2数学", "q": "反比例 y=12/x で、x=3 のとき y は？", "opts": ["3", "4", "9", "36"], "ans": 1, "exp": "y=12÷3=4。"}, {"section": "中1〜中2数学", "q": "点 (−2,5) は第何象限にある？", "opts": ["第1象限", "第2象限", "第3象限", "第4象限"], "ans": 1, "exp": "xが負、yが正なので第2象限。"}, {"section": "中1〜中2数学", "q": "底辺8cm、高さ5cmの三角形の面積は？", "opts": ["13cm²", "20cm²", "40cm²", "80cm²"], "ans": 1, "exp": "8×5÷2=20cm²。"}, {"section": "中1〜中2数学", "q": "半径3cmの円の円周は？（円周率はπ）", "opts": ["3πcm", "6πcm", "9πcm", "12πcm"], "ans": 1, "exp": "円周=直径×π=6πcm。"}, {"section": "中1〜中2数学", "q": "平行な2直線に1本の直線が交わるとき、錯角の大きさは？", "opts": ["等しい", "和が90°", "和が180°", "必ず0°"], "ans": 0, "exp": "平行線の錯角は等しい。"}, {"section": "中1〜中2数学", "q": "一次方程式 x/3=5 の解は？", "opts": ["2", "8", "15", "以上のどれでもない"], "ans": 2, "exp": "両辺に3を掛けて x=15。"}, {"section": "中1〜中2数学", "q": "袋に赤玉3個、青玉2個が入っている。1個取り出すとき赤玉が出る確率は？", "opts": ["1/5", "2/5", "3/5", "3/2"], "ans": 2, "exp": "全部で5個、赤玉3個なので確率は3/5。"}];
+const labels = ["ア","イ","ウ","エ"];
+const quiz = document.getElementById("quiz");
+const sections = [...new Set(questions.map(q => q.section))];
+let graded = false;
+
+sections.forEach(section => {
+  const heading = document.createElement("h2");
+  heading.className = "section-title";
+  heading.textContent = section === "英単語" ? "第1部　英単語（20問）" :
+    section === "一次関数" ? "第2部　数学：一次関数の基礎（20問）" :
+    "第3部　数学：中学1〜2年の復習（20問）";
+  quiz.appendChild(heading);
+  questions.forEach((q, idx) => {
+    if (q.section !== section) return;
+    const card = document.createElement("section");
+    card.className = "question";
+    card.id = "q" + idx;
+    const title = document.createElement("div");
+    title.className = "qtitle";
+    const sectionNum = questions.slice(0, idx + 1).filter(x => x.section === section).length;
+    title.textContent = `${sectionNum}. ${q.q}`;
+    card.appendChild(title);
+    const options = document.createElement("div");
+    options.className = "options";
+    q.opts.forEach((opt, oi) => {
+      const label = document.createElement("label");
+      label.className = "option";
+      label.htmlFor = `q${idx}o${oi}`;
+      const radio = document.createElement("input");
+      radio.type = "radio"; radio.name = `q${idx}`; radio.id = `q${idx}o${oi}`; radio.value = oi;
+      radio.addEventListener("change", updateProgress);
+      const span = document.createElement("span");
+      span.textContent = `${labels[oi]}. ${opt}`;
+      label.append(radio, span);
+      options.appendChild(label);
+    });
+    card.appendChild(options);
+    const feedback = document.createElement("div");
+    feedback.className = "feedback";
+    feedback.id = `feedback${idx}`;
+    card.appendChild(feedback);
+    quiz.appendChild(card);
+  });
+});
+
+function updateProgress() {
+  const count = questions.filter((q, i) => document.querySelector(`input[name="q${i}"]:checked`)).length;
+  document.getElementById("answered").textContent = count;
+  document.getElementById("progress").style.width = `${count / questions.length * 100}%`;
+  if (graded) gradeQuiz();
+}
+document.getElementById("nameInput").addEventListener("input", e => {
+  document.getElementById("studentName").textContent = e.target.value.trim() || "未記入";
+});
+function gradeQuiz() {
+  graded = true;
+  let score = 0;
+  questions.forEach((q, idx) => {
+    const selected = document.querySelector(`input[name="q${idx}"]:checked`);
+    const card = document.getElementById(`q${idx}`);
+    const feedback = document.getElementById(`feedback${idx}`);
+    card.querySelectorAll(".option").forEach((el, oi) => {
+      el.classList.remove("correct", "wrong");
+      if (oi === q.ans) el.classList.add("correct");
+      if (selected && Number(selected.value) === oi && Number(selected.value) !== q.ans) el.classList.add("wrong");
+    });
+    if (selected && Number(selected.value) === q.ans) score++;
+    feedback.className = "feedback show";
+    feedback.innerHTML = `<div class="${selected && Number(selected.value) === q.ans ? "right" : "incorrect"}">${selected ? (Number(selected.value) === q.ans ? "正解！" : "不正解") : "未回答"}　正解：${labels[q.ans]}. ${q.opts[q.ans]}</div><div>${q.exp}</div>`;
+  });
+  const result = document.getElementById("result");
+  result.classList.add("show");
+  document.getElementById("scoreText").textContent = `${score} / ${questions.length} 点`;
+  const percent = Math.round(score / questions.length * 100);
+  document.getElementById("resultMessage").textContent =
+    `${document.getElementById("nameInput").value.trim() ? document.getElementById("nameInput").value.trim() + "さん、" : ""}${percent >= 90 ? "すばらしい！よくできました。" : percent >= 70 ? "よく頑張りました。間違えた問題を復習しよう。" : "解説を確認して、もう一度挑戦してみよう。"}（正答率 ${percent}%）`;
+  document.getElementById("gradeBtn").textContent = "もう一度採点する";
+  result.scrollIntoView({behavior:"smooth", block:"start"});
+}
+document.getElementById("gradeBtn").addEventListener("click", gradeQuiz);
+document.getElementById("resetBtn").addEventListener("click", () => {
+  if (!confirm("回答をすべて消して、最初からやり直しますか？")) return;
+  graded = false;
+  questions.forEach((q, idx) => {
+    document.querySelectorAll(`input[name="q${idx}"]`).forEach(r => r.checked = false);
+    const card = document.getElementById(`q${idx}`);
+    card.querySelectorAll(".option").forEach(el => el.classList.remove("correct", "wrong"));
+    const feedback = document.getElementById(`feedback${idx}`);
+    feedback.className = "feedback"; feedback.textContent = "";
+  });
+  document.getElementById("result").classList.remove("show");
+  document.getElementById("gradeBtn").textContent = "採点する";
+  updateProgress();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+</script>
+</body></html>
